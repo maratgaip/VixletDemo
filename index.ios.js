@@ -9,18 +9,10 @@ import {
   View
 } from 'react-native';
 
-/*export default class VixletDemo extends Component {
-
-  render() {
-    const appParams = {initialProps:{initialView:"inbox"}}
-    return <Inbox />
-  }
-}*/
-
 const store = configureStore()
 const VixletDemo = () => (
   <Provider store={store}>
-    <DirectMessage initialView="create"/>
+    <DirectMessage initialView="inbox"/>
   </Provider>
 )
 

@@ -1,5 +1,5 @@
 import { FETCHING_DATA, FETCHING_DATA_SUCCESS, FETCHING_DATA_FAILURE, FETCHING_USERS, FETCHING_USERS_SUCCESS, FETCHING_USERS_FAILURE } from './constants'
-import getPeople from './api'
+import getConversations from './api'
 
 export function getData() {
   return {
@@ -23,7 +23,8 @@ export function getDataFailure() {
 export function fetchData() {
   return (dispatch) => {
     dispatch(getData())
-    getPeople()
+    // here we make api call to get conversations
+    getConversations()
       .then((data) => {
         dispatch(getDataSuccess(data))
       })
@@ -53,8 +54,10 @@ export function getUsersFailure() {
 }
 export function fetchUsers(text) {
   return (dispatch) => {
-    dispatch(getUsers(text))
-    getPeople()
+    dispatch(getUsers())
+    // here we make api call to search user with typed text
+    // we need to use debounce like we r using in search user module in webapp
+    getConversations()
       .then((data) => {
         dispatch(getUsersSuccess(data))
       })
