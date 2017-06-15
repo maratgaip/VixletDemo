@@ -1,7 +1,8 @@
 'use strict';
 import React, { Component } from 'react';
-import { NavigationActions } from 'react-navigation';
-
+import {
+  Link,
+} from 'react-router-native';
 import {
   StyleSheet,
   View,
@@ -12,19 +13,35 @@ import {
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
     padding: 12,
     flexDirection: 'row',
-    alignItems: 'center',
     borderBottomWidth: 1,
-    borderBottomColor: '#ccc'
+    borderBottomColor: '#ccc',
   },
   username: {
     fontSize: 16,
   },
-  text: {
+  created: {
     fontSize: 16,
-    color: '#777'
+  },
+  title: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  content: {
+    flex: 1
+  },
+  text: {
+    fontSize: 15,
+    color: '#777',
+  },
+  unread: {
+    width: 8,
+    height: 8,
+    marginTop: 20,
+    marginLeft: 5,
+    borderRadius: 5,
+    backgroundColor: '#000'
   },
   avatar: {
     height: 40,
@@ -44,21 +61,22 @@ class Message extends Component {
     navigation.navigate('Chat', { ...user });
   };
   render() {
-    const { avatar, username, message } = this.props.user;
+    const { avatar, username, message, created } = this.props.user;
+    const userId = 10;
     return (
-      <TouchableHighlight onPress={ this.messageClick }>
+      <Link to={`/conversation/${userId}`}>
         <View style={ styles.container }>
           <Image source={{ uri: avatar }} style={ styles.avatar } />
-          <View>
-            <View>
+          <View style={ styles.content }>
+            <View style={ styles.title }>
               <Text style={ styles.username }>{ username }</Text>
+              <Text style={ styles.created }>{ created }</Text>
             </View>
-            <View>
-              <Text style={ styles.text }>{ message }</Text>
-            </View>
+            <Text style={ styles.text }>{ message }</Text>
           </View>
+          <View style={ styles.unread }></View>
       </View>
-    </TouchableHighlight>
+    </Link>
     );
   }
 }

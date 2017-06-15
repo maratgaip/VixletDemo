@@ -1,20 +1,27 @@
 import React, { Component } from 'react';
-import Inbox from './app/components/inbox';
-import DirectMessage from '@vixlet/react-native-direct-message'
+import DirectMessage from './app/components/directMessage';
+//import DirectMessage from '@vixlet/react-native-direct-message'
+import { Provider } from 'react-redux'
+import configureStore from './app/configureStore'
 import {
   AppRegistry,
   Text,
   View
 } from 'react-native';
 
-export default class VixletDemo extends Component {
+/*export default class VixletDemo extends Component {
+
   render() {
-    var allProps = [];
-    for (var prop in this.props) {
-      allProps.push(<View><Text>{prop +':' + obj[prop]}</Text></View>);
-    }
-    return <View>{ allProps }</View>
+    const appParams = {initialProps:{initialView:"inbox"}}
+    return <Inbox />
   }
-}
+}*/
+
+const store = configureStore()
+const VixletDemo = () => (
+  <Provider store={store}>
+    <DirectMessage initialView="create"/>
+  </Provider>
+)
 
 AppRegistry.registerComponent('VixletDemo', () => VixletDemo);
