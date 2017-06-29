@@ -4,7 +4,7 @@ import {
 
 const initialState = {
   domain: null,
-  initialView: 'create',
+  initialView: 'conversations',
   originApi: 'https://api.vixletinternal.com/',
   token: '',
   user: null,

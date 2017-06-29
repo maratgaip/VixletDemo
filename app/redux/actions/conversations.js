@@ -66,6 +66,8 @@ export const setUsers = users => ({
 });
 
 export const fetchUsers = query => (dispatch, getState) => {
+  dispatch(getData());
+
   const state = getState();
   const {
     originApi,

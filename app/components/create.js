@@ -3,6 +3,7 @@ import PropTypes from 'prop-types';
 import {
   StyleSheet,
   View,
+  ActivityIndicator,
   Text,
   TextInput,
   ListView,
@@ -10,6 +11,7 @@ import {
 } from 'react-native';
 import { Link, withRouter } from 'react-router-native';
 import { connect } from 'react-redux';
+import { debounce } from 'lodash';
 import { fetchUsers } from '../redux/actions/conversations';
 import UserRow from './userRow';
 
@@ -33,7 +35,6 @@ const styles = StyleSheet.create({
     color: '#fff',
   },
   input: {
-    justifyContent: 'center',
     height: 40,
     paddingLeft:35,
     fontSize: 14,
@@ -54,6 +55,11 @@ const styles = StyleSheet.create({
     height: 40,
     backgroundColor: '#eee',
   },
+  content: {
+    justifyContent: 'center',
+    flexDirection: 'row',
+    paddingTop: 20,
+  },
   header: {
     height: 40,
     paddingTop: 10,
@@ -69,7 +75,8 @@ class Create extends Component {
       search: '',
       users: this.ds.cloneWithRows(this.props.users),
     };
-    this.onChange = this.onChange.bind(this);
+    this.runQuery = this.runQuery.bind(this);
+    this.onChange = debounce( (text) => this.runQuery(text), 500, { leading: false, trailing: true } );
   }
 
   componentWillReceiveProps(nextProps) {
@@ -79,8 +86,7 @@ class Create extends Component {
     }
   }
 
-  // TODO: Debounce me
-  onChange(text) {
+  runQuery(text) {
     this.setState({ search: text });
     this.props.dispatch(fetchUsers(text));
   }
@@ -90,7 +96,24 @@ class Create extends Component {
     if (this.state.search.length) {
       suggested = null
     }
-    console.log(this.props)
+    let data = <View style={styles.content}><ActivityIndicator /></View>;
+
+    if (!this.props.isFetching) {
+      if(!this.props.users.length) {
+        data = <View style={styles.content}><Text>No results found</Text></View>
+      } else {
+        const users = this.ds.cloneWithRows(this.props.users);
+        data = (
+          <ScrollView style={styles.scrollView}>
+            <ListView
+              dataSource={users}
+              enableEmptySections
+              renderRow={rowData => <UserRow {...rowData} />}
+              />
+          </ScrollView>
+        );
+      }
+    }
     return (
       <View style={styles.container}>
         <View style={styles.header}>
@@ -110,13 +133,7 @@ class Create extends Component {
             />
         </View>
         { suggested }
-        <ScrollView style={styles.scrollView}>
-          <ListView
-            dataSource={this.state.users}
-            enableEmptySections
-            renderRow={rowData => <UserRow {...rowData} />}
-          />
-        </ScrollView>
+        { data }
       </View>
     );
   }
@@ -124,12 +141,15 @@ class Create extends Component {
 
 Create.propTypes = {
   users: PropTypes.array.isRequired,
+  isFetching: PropTypes.bool,
   dispatch: PropTypes.func.isRequired,
 };
 
 function mapStateToProps(state) {
+  const { users, isFetching } = state.conversations;
   return {
-    users: state.conversations.users,
+    users,
+    isFetching
   };
 }
 

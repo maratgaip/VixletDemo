@@ -19,7 +19,7 @@ export default function conversations(state = initialState, action) {
     case FETCHING_DATA:
       return {
         ...state,
-        data: [],
+        //data: [],
         isFetching: true,
       };
     case FETCHING_DATA_SUCCESS:

@@ -60,7 +60,7 @@ App.propTypes = {
 };
 
 App.defaultProps = {
-  initialView: 'create',
+  initialView: 'conversations',
 };
 
 export default App;

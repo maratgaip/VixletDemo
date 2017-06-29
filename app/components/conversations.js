@@ -46,16 +46,15 @@ class Conversations extends Component {
   }
 
   componentWillMount() {
-    if (!this.props.conversations.data.length) {
+    if (!this.props.data.length) {
       this.props.dispatch(fetchConversations());
     }
   }
 
   render() {
     let data = <ActivityIndicator />;
-
-    if (!this.props.conversations.isFetching && this.props.conversations.data.length) {
-      const conversations = this.ds.cloneWithRows(this.props.conversations.data);
+    if (!this.props.isFetching && this.props.data.length) {
+      const conversations = this.ds.cloneWithRows(this.props.data);
       data = (
         <ScrollView style={styles.container}>
           <ListView
@@ -75,16 +74,16 @@ class Conversations extends Component {
 }
 
 Conversations.propTypes = {
-  conversations: PropTypes.shape({
-    data: PropTypes.array,
-    isFetching: PropTypes.boolean,
-  }).isRequired,
+  data: PropTypes.array.isRequired,
+  isFetching: PropTypes.bool.isRequired,
   dispatch: PropTypes.func.isRequired,
 };
 
 function mapStateToProps(state) {
+  const { data, isFetching } = state.conversations;
   return {
-    conversations: state.conversations,
+    data,
+    isFetching,
     token: state.app.token,
   };
 }
