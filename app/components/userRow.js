@@ -48,39 +48,30 @@ const styles = StyleSheet.create({
   },
 });
 
-class Message extends Component {
+class UserRow extends Component {
   render() {
-    const { id, members, messages, statuses: { created } } = this.props.message;
-    // FIX ME this should have better validation
-    const { message } = messages[0];
-    const { username, avatar: { original: avatar } } = members[0];
+    const { id, username, avatar } = this.props;
 
     return (
       <Link to={`/conversation/${id}`}>
         <View style={styles.container}>
-          <Image source={{ uri: avatar }} style={styles.avatar} />
+          <Image source={{ uri: avatar.original }} style={styles.avatar} />
           <View style={styles.content}>
             <View style={styles.title}>
               <Text style={styles.username}>{ username }</Text>
-              <Text style={styles.created}>{ created }</Text>
             </View>
-            <Text style={styles.text}>{ message }</Text>
           </View>
-          <View style={styles.unread} />
         </View>
       </Link>
     );
   }
 }
 
-Message.propTypes = {
-  message: PropTypes.shape({
-    id: PropTypes.string,
-    members: PropTypes.array,
-    messages: PropTypes.array,
-    statuses: PropTypes.object,
-  }).isRequired,
+UserRow.propTypes = {
+  id: PropTypes.string.isRequired,
+  username: PropTypes.string.isRequired,
+  avatar: PropTypes.object.isRequired,
 };
 
 
-export default Message;
+export default UserRow;

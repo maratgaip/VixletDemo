@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import DirectMessage from './app/components/directMessage';
+import DirectMessage from './app/directMessage';
 //import DirectMessage from '@vixlet/react-native-direct-message'
 import { Provider } from 'react-redux'
 import configureStore from './app/configureStore'

@@ -1,29 +1,27 @@
 import React, { Component } from 'react';
+import PropTypes from 'prop-types';
 import {
+  ActivityIndicator,
   StyleSheet,
   View,
   Text,
   ListView,
-  TouchableHighlight,
-  ScrollView
+  ScrollView,
 } from 'react-native';
-import { NativeRouter, Route, Link, Switch } from 'react-router-native'
-import Chat from './chat';
-import SingleMessage from './singleMessage';
-import Create from './create';
-import Redirect from 'react-router/Redirect'
+import { Link, withRouter } from 'react-router-native';
+import { connect } from 'react-redux';
 
-import { connect } from 'react-redux'
-import { fetchData } from '../actions'
+import SingleMessage from './singleMessage';
+import { fetchConversations } from '../redux/actions/conversations';
 
 const styles = StyleSheet.create({
   description: {
     fontSize: 20,
     textAlign: 'center',
-    color: '#000'
+    color: '#000',
   },
   container: {
-    flex: 1
+    flex: 1,
   },
   icon: {
     backgroundColor: '#1DAFEC',
@@ -31,65 +29,64 @@ const styles = StyleSheet.create({
     width: 50,
     position: 'absolute',
     bottom: 10,
-    right: 10
+    right: 10,
   },
   iconText: {
-    color: '#fff'
+    color: '#fff',
   },
   loadData: {
-    marginTop: 40
-  }
+    marginTop: 40,
+  },
 });
 
 class Conversations extends Component {
   constructor(props) {
     super(props);
-    this.ds = new ListView.DataSource({rowHasChanged: (r1, r2) => r1 !== r2});
+    this.ds = new ListView.DataSource({ rowHasChanged: (r1, r2) => r1 !== r2 });
   }
 
-  componentWillMount(){
+  componentWillMount() {
     if (!this.props.conversations.data.length) {
-      this.props.fetchData();
+      this.props.dispatch(fetchConversations());
     }
   }
 
   render() {
+    let data = <ActivityIndicator />;
 
-    let data = (<View><Text>loading</Text></View>);
-
-    if(!this.props.conversations.isFetching && this.props.conversations.data.length){
-      const users = this.ds.cloneWithRows(this.props.conversations.data);
+    if (!this.props.conversations.isFetching && this.props.conversations.data.length) {
+      const conversations = this.ds.cloneWithRows(this.props.conversations.data);
       data = (
-      <ScrollView style={styles.container}>
-        <ListView
-          dataSource={users}
-          renderRow={(rowData) => <SingleMessage user={rowData}  />}
+        <ScrollView style={styles.container}>
+          <ListView
+            dataSource={conversations}
+            renderRow={rowData => <SingleMessage message={rowData} />}
           />
-      </ScrollView>
+        </ScrollView>
       );
     }
     return (
       <View style={styles.container}>
         { data }
-        <Link style={ styles.icon } to="/create"><Text>Create</Text></Link>
+        <Link style={styles.icon} to="/create"><Text>Create</Text></Link>
       </View>
     );
   }
 }
 
-function mapStateToProps (state) {
+Conversations.propTypes = {
+  conversations: PropTypes.shape({
+    data: PropTypes.array,
+    isFetching: PropTypes.boolean,
+  }).isRequired,
+  dispatch: PropTypes.func.isRequired,
+};
+
+function mapStateToProps(state) {
   return {
-    conversations: state.conversations
-  }
+    conversations: state.conversations,
+    token: state.app.token,
+  };
 }
 
-function mapDispatchToProps (dispatch) {
-  return {
-    fetchData: () => dispatch(fetchData())
-  }
-}
-
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(Conversations)
+export default withRouter(connect(mapStateToProps)(Conversations));
