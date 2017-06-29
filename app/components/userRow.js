@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
+import moment from 'moment';
 import { Link } from 'react-router-native';
 import {
   StyleSheet,
@@ -30,7 +31,7 @@ const styles = StyleSheet.create({
   },
   text: {
     fontSize: 15,
-    color: '#777',
+    color: '#b2b2b2',
   },
   unread: {
     width: 8,
@@ -50,8 +51,8 @@ const styles = StyleSheet.create({
 
 class UserRow extends Component {
   render() {
-    const { id, username, avatar } = this.props;
-
+    const { id, username, avatar, statuses } = this.props;
+    const conversationTime = moment( statuses.created ).utc().fromNow();
     return (
       <Link to={`/conversation/${id}`}>
         <View style={styles.container}>
@@ -59,6 +60,10 @@ class UserRow extends Component {
           <View style={styles.content}>
             <View style={styles.title}>
               <Text style={styles.username}>{ username }</Text>
+              <Text style={styles.text}>{ conversationTime }</Text>
+            </View>
+            <View style={styles.title}>
+              <Text style={styles.text}>Last message will be here</Text>
             </View>
           </View>
         </View>

@@ -19,22 +19,45 @@ const styles = StyleSheet.create({
   },
   scrollView: {
     flex: 1,
-    marginTop: 60,
   },
-  newMessage: {
-    paddingLeft: 20,
+  cancel: {
+    padding: 10,
+    width: 100,
+    position:'absolute',
+  },
+  title: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+  },
+  headerText: {
+    color: '#fff',
   },
   input: {
+    justifyContent: 'center',
     height: 40,
-    marginTop: 13,
-    backgroundColor: '#eee',
+    paddingLeft:35,
+    fontSize: 14,
+  },
+  searchText: {
     paddingLeft: 10,
+    paddingTop: 11,
+    fontSize: 14,
+    position:'absolute',
+    color: '#878f96',
+  },
+  suggested: {
+    paddingLeft: 10,
+    paddingTop: 5,
+    color: '#858d94',
+  },
+  search: {
+    height: 40,
+    backgroundColor: '#eee',
   },
   header: {
-    right: 0,
     height: 40,
     paddingTop: 10,
-    backgroundColor: '#868E95',
+    backgroundColor: '#868e95',
   },
 });
 
@@ -43,6 +66,7 @@ class Create extends Component {
     super(props);
     this.ds = new ListView.DataSource({ rowHasChanged: (r1, r2) => r1 !== r2 });
     this.state = {
+      search: '',
       users: this.ds.cloneWithRows(this.props.users),
     };
     this.onChange = this.onChange.bind(this);
@@ -57,20 +81,35 @@ class Create extends Component {
 
   // TODO: Debounce me
   onChange(text) {
+    this.setState({ search: text });
     this.props.dispatch(fetchUsers(text));
   }
 
   render() {
+    let suggested = <Text style={styles.suggested}>Suggested</Text>;
+    if (this.state.search.length) {
+      suggested = null
+    }
+    console.log(this.props)
     return (
       <View style={styles.container}>
         <View style={styles.header}>
-          <Link style={styles.newMessage} to="/conversations"><Text>Cancel</Text></Link>
+          <View style={styles.cancel}>
+            <Link to="/conversations"><Text style={styles.headerText}>Cancel</Text></Link>
+          </View>
+          <View style={styles.title}>
+            <Text style={styles.headerText}>New Message</Text>
+          </View>
+        </View>
+        <View style={styles.search}>
+          <Text style={styles.searchText}>To:</Text>
           <TextInput
             style={styles.input}
             placeholder={'Search for a user'}
             onChangeText={this.onChange}
-          />
+            />
         </View>
+        { suggested }
         <ScrollView style={styles.scrollView}>
           <ListView
             dataSource={this.state.users}
