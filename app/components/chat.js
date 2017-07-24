@@ -6,11 +6,20 @@ import {
   TextInput,
   Keyboard,
   Button,
+  TouchableOpacity,
   ScrollView,
+  Image,
 } from 'react-native';
 import {
   Link,
+  withRouter,
 } from 'react-router-native';
+import { connect } from 'react-redux';
+import ReactTimeout from 'react-timeout';
+
+import { fetchMessages, sendMessage } from '../redux/actions/conversations';
+
+const backArrowImage = require('../assets/left-arrow.png');
 
 const styles = StyleSheet.create({
   container: {
@@ -19,33 +28,63 @@ const styles = StyleSheet.create({
     borderBottomColor: '#ccc',
     backgroundColor: '#FFFFFF',
   },
-  username: {
-    fontSize: 16,
-  },
   me: {
     marginTop: 10,
     alignSelf: 'flex-end',
-    backgroundColor: '#F8F9FA',
-    overflow: 'hidden',
-    borderRadius: 10,
+    overflow: 'visible',
+    position: 'relative',
   },
   friend: {
     marginTop: 10,
     alignSelf: 'flex-start',
-    backgroundColor: '#ADB5BC',
-    overflow: 'hidden',
-    borderRadius: 10,
+    overflow: 'visible',
+    position: 'relative',
   },
   textMe: {
     fontSize: 16,
     color: '#484E55',
-    padding: 10,
+    padding: 14,
+    backgroundColor: '#F8F9FA',
+    borderRadius: 5,
+    overflow: 'hidden',
+  },
+  arrowMe: {
+    width: 0,
+    height: 0,
+    borderTopColor: 'transparent',
+    borderTopWidth: 6,
+    borderBottomColor: 'transparent',
+    borderBottomWidth: 6,
+    borderLeftColor: '#F8F9FA',
+    borderLeftWidth: 6,
+    position: 'absolute',
+    top: '50%',
+    right: -4,
+    zIndex: 1,
+    marginTop: -6,
   },
   textFriend: {
     fontSize: 16,
     color: '#fff',
-    borderRadius: 10,
-    padding: 10,
+    padding: 14,
+    backgroundColor: '#ADB5BC',
+    borderRadius: 5,
+    overflow: 'hidden',
+  },
+  arrowFriend: {
+    width: 0,
+    height: 0,
+    borderTopColor: 'transparent',
+    borderTopWidth: 6,
+    borderBottomColor: 'transparent',
+    borderBottomWidth: 6,
+    borderRightColor: '#ADB5BC',
+    borderRightWidth: 6,
+    position: 'absolute',
+    top: '50%',
+    left: -4,
+    zIndex: 1,
+    marginTop: -6,
   },
   avatar: {
     height: 40,
@@ -55,20 +94,33 @@ const styles = StyleSheet.create({
   },
   input: {
     height: 40,
-    borderTopColor: 'gray',
+    borderTopColor: '#868E95',
     flex: 1,
   },
-  send: {
-    color: 'gray',
-  },
   back: {
-    paddingLeft: 20,
+    paddingLeft: 10,
+  },
+  backArrow: {
+    width: 13,
+    height: 23,
+  },
+  infoIcon: {
+    width: 23,
+    height: 23,
+    marginRight: 10,
+  },
+  username: {
+    fontSize: 16,
+    color: '#FFFFFF',
+    alignSelf: 'auto',
   },
   header: {
     right: 0,
-    height: 40,
     paddingTop: 10,
+    paddingBottom: 10,
     backgroundColor: '#868E95',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
   },
   footer: {
     flex: 1,
@@ -87,42 +139,43 @@ const styles = StyleSheet.create({
     paddingRight: 10,
     paddingBottom: 20,
   },
+  dateHolder: {
+    padding: 10,
+    flexDirection: 'row',
+    justifyContent: 'center',
+  },
+  date: {
+    color: '#868E95',
+  },
 });
 
 class Chat extends Component {
   constructor(props) {
     super(props);
-    // const { params } = this.props.navigation.state;
-    const params = { message: 'Sample message will be here' };
     this.state = {
       text: '',
-      messages: [
-        { message: params.message, type: 'me' },
-        { message: params.message, type: 'friend' },
-        { message: params.message, type: 'friend' },
-        { message: params.message, type: 'friend' },
-        { message: params.message, type: 'me' },
-        { message: params.message, type: 'friend' },
-        { message: params.message, type: 'me' },
-        { message: params.message, type: 'friend' },
-        { message: params.message, type: 'friend' },
-        { message: params.message, type: 'friend' },
-        { message: params.message, type: 'me' },
-        { message: params.message, type: 'friend' },
-        { message: params.message, type: 'me' },
-        { message: 'last one', type: 'friend' },
-      ],
       listHeight: 0,
       marginBottom: 40,
-      scrollViewHeight: 0
+      scrollViewHeight: 0,
+      refreshing: false,
     };
     this.onSend = this.onSend.bind(this);
+    this.onRefresh = this.onRefresh.bind(this);
     this.keyboardWillShow = this.keyboardWillShow.bind(this);
     this.keyboardWillHide = this.keyboardWillHide.bind(this);
+    this.getConversationHeader = this.getConversationHeader.bind(this);
   }
   componentWillMount() {
     Keyboard.addListener('keyboardWillShow', this.keyboardWillShow);
     Keyboard.addListener('keyboardWillHide', this.keyboardWillHide);
+  }
+
+  componentDidMount() {
+    this.props.dispatch(fetchMessages(this.props.match.params.id));
+    // TODO: use SSE instead of polling
+    this.props.setInterval(() => {
+      this.props.dispatch(fetchMessages(this.props.match.params.id));
+    }, 3000);
   }
 
   componentDidUpdate() {
@@ -130,7 +183,7 @@ class Chat extends Component {
     const bottomOfList = this.state.listHeight - this.state.scrollViewHeight;
 
     // tell the scrollView component to scroll to it
-    this.scrollView.scrollTo({ y: bottomOfList + 20 });
+    this.scrollView.scrollTo({ y: bottomOfList + 20, animated: false });
   }
 
   componentWillUnmount() {
@@ -141,10 +194,37 @@ class Chat extends Component {
   onSend() {
     const { text } = this.state;
     if (text.length) {
-      const messages = this.state.messages;
-      messages.push({ message: text, type: 'me' });
+      this.props.dispatch(sendMessage(this.props.match.params.id, text));
       this.setState({ text: '' });
     }
+  }
+
+  onRefresh() {
+    this.setState({ refreshing: true });
+    this.props.dispatch(fetchMessages(this.props.match.params.id))
+      .catch(err => console.log(err))
+      .then(() => {
+        setTimeout(() => {
+          this.setState({ refreshing: false });
+        }, 500);
+      });
+  }
+
+  getConversationHeader() {
+    const conversation = this.props.conversations[this.props.match.params.id];
+    if (!conversation) {
+      return '';
+    }
+
+    const filteredMembers = conversation.members.filter(member => member !== this.props.myUserId);
+
+    const user = this.props.users[filteredMembers[0]];
+    if (user) {
+      return user.username;
+    }
+
+    console.log('Error finding user in users store');
+    return '';
   }
 
   keyboardWillHide() {
@@ -157,20 +237,38 @@ class Chat extends Component {
   }
 
   renderRow(message, index) {
-    const viewStyle = message.type === 'me' ? styles.me : styles.friend;
-    const textStyle = message.type === 'me' ? styles.textMe : styles.textFriend;
+    const myMessage = (this.props.myUserId === message.creatorId);
+
+    const viewStyle = myMessage ? styles.me : styles.friend;
+    const textStyle = myMessage ? styles.textMe : styles.textFriend;
+    const arrowStyle = myMessage ? styles.arrowMe : styles.arrowFriend;
     return (
       <View style={viewStyle} key={index}>
+        <View style={arrowStyle} />
         <Text style={textStyle}>{message.message}</Text>
       </View>
     );
   }
 
   render() {
+    const messages = this.props.messages[this.props.match.params.id] || [];
+
     return (
       <View style={styles.container}>
         <View style={styles.header}>
-          <Link style={styles.back} to="/conversations"><Text> back </Text></Link>
+          <Link
+            style={styles.back}
+            to="/conversations"
+            component={TouchableOpacity}
+            activeOpacity={0.8}
+            >
+            <Image style={styles.backArrow} source={backArrowImage} />
+          </Link>
+          <Text style={styles.username}>{ this.getConversationHeader() }</Text>
+          <View style={styles.infoIcon} />
+        </View>
+        <View style={styles.dateHolder}>
+          <Text style={styles.date}>Today</Text>
         </View>
         <ScrollView
           style={[styles.scrollView, { marginBottom: this.state.marginBottom }]}
@@ -184,8 +282,9 @@ class Chat extends Component {
             const height = e.nativeEvent.layout.height;
             this.setState({ scrollViewHeight: height });
           }}
-        >
-          {this.state.messages.map((message, index) => this.renderRow(message, index))}
+          >
+
+          {messages.map((message, index) => this.renderRow(message, index))}
         </ScrollView>
         <View style={[styles.footer, { bottom: this.state.marginBottom - 40 }]}>
           <TextInput
@@ -194,12 +293,21 @@ class Chat extends Component {
             onChangeText={text => this.setState({ text })}
             value={this.state.text}
             onSubmitEditing={Keyboard.dismiss}
-          />
-          <Button style={styles.send} onPress={this.onSend} title="Send" />
+            />
+          <Button color="#868E95" onPress={this.onSend} title="Send" />
         </View>
       </View>
     );
   }
 }
 
-export default Chat;
+function mapStateToProps(state) {
+  return {
+    messages: state.conversations.messages,
+    conversations: state.conversations.entities.conversations,
+    myUserId: state.app.user.id,
+    users: state.conversations.entities.users,
+  };
+}
+
+export default ReactTimeout(withRouter(connect(mapStateToProps)(Chat)));

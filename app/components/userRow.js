@@ -1,13 +1,17 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
-import moment from 'moment';
-import { Link } from 'react-router-native';
+import { withRouter } from 'react-router-native';
 import {
   StyleSheet,
   View,
   Text,
   Image,
+  TouchableHighlight,
 } from 'react-native';
+import { connect } from 'react-redux';
+import _ from 'lodash';
+
+import { createConversation } from '../redux/actions/conversations';
 
 const styles = StyleSheet.create({
   container: {
@@ -50,33 +54,56 @@ const styles = StyleSheet.create({
 });
 
 class UserRow extends Component {
+  constructor(props) {
+    super(props);
+
+    this.handleClick = this.handleClick.bind(this);
+  }
+
+  handleClick() {
+    this.props.dispatch(createConversation([this.props.id]))
+      .then((id) => {
+        this.props.history.push(`/conversation/${id}`);
+      })
+      .catch(err => console.log(err));
+  }
+
   render() {
-    const { id, username, avatar, statuses } = this.props;
-    const conversationTime = moment( statuses.created ).utc().fromNow();
+    const { id, username, avatar, latestMessagesByUser } = this.props;
+    const message = latestMessagesByUser[id] || '';
+    const avatarPic = _.get(avatar, 'original');
+
     return (
-      <Link to={`/conversation/${id}`}>
-        <View style={styles.container}>
-          <Image source={{ uri: avatar.original }} style={styles.avatar} />
+      <TouchableHighlight onPress={this.handleClick} underlayColor="#ddd" >
+        <View style={styles.container} >
+          <Image source={{ uri: avatarPic }} style={styles.avatar} />
           <View style={styles.content}>
             <View style={styles.title}>
               <Text style={styles.username}>{ username }</Text>
-              <Text style={styles.text}>{ conversationTime }</Text>
             </View>
             <View style={styles.title}>
-              <Text style={styles.text}>Last message will be here</Text>
+              <Text style={styles.text}>{ message }</Text>
             </View>
           </View>
         </View>
-      </Link>
+      </TouchableHighlight>
     );
   }
 }
 
 UserRow.propTypes = {
+  dispatch: PropTypes.func.isRequired,
   id: PropTypes.string.isRequired,
   username: PropTypes.string.isRequired,
   avatar: PropTypes.object.isRequired,
 };
 
 
-export default UserRow;
+function mapStateToProps(state) {
+  const { latestMessagesByUser } = state.conversations;
+  return {
+    latestMessagesByUser,
+  };
+}
+
+export default withRouter(connect(mapStateToProps)(UserRow));

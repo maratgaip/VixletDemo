@@ -5,34 +5,36 @@ import {
   StyleSheet,
   View,
   Text,
+  Image,
   ListView,
   ScrollView,
+  TouchableOpacity,
 } from 'react-native';
 import { Link, withRouter } from 'react-router-native';
 import { connect } from 'react-redux';
+import ReactTimeout from 'react-timeout';
 
-import SingleMessage from './singleMessage';
+import SingleConversation from './singleConversation';
 import { fetchConversations } from '../redux/actions/conversations';
 
 const styles = StyleSheet.create({
   description: {
-    fontSize: 20,
+    fontSize: 14,
+    marginTop: 10,
     textAlign: 'center',
-    color: '#000',
+    color: '#777',
   },
   container: {
     flex: 1,
   },
   icon: {
-    backgroundColor: '#1DAFEC',
-    height: 50,
-    width: 50,
     position: 'absolute',
     bottom: 10,
     right: 10,
   },
-  iconText: {
-    color: '#fff',
+  iconImg: {
+    height: 70,
+    width: 70,
   },
   loadData: {
     marginTop: 40,
@@ -46,46 +48,76 @@ class Conversations extends Component {
   }
 
   componentWillMount() {
-    if (!this.props.data.length) {
+    // if (!this.props.conversationIds.length) {
+    this.props.dispatch(fetchConversations());
+    this.props.setInterval(() => {
       this.props.dispatch(fetchConversations());
-    }
+    }, 5000);
+    //}
   }
 
   render() {
-    let data = <ActivityIndicator />;
-    if (!this.props.isFetching && this.props.data.length) {
-      const conversations = this.ds.cloneWithRows(this.props.data);
-      data = (
-        <ScrollView style={styles.container}>
-          <ListView
-            dataSource={conversations}
-            renderRow={rowData => <SingleMessage message={rowData} />}
-          />
-        </ScrollView>
-      );
+    const { conversationIds, conversations, isFetching } = this.props;
+    let inbox = <ActivityIndicator />;
+    console.log(this.props)
+    if (!isFetching) {
+      if (!conversationIds.length) {
+        inbox = (
+          <View><Text style={styles.description}>no conversations found</Text></View>
+        );
+      } else {
+        const data = this.ds.cloneWithRows(Object.keys(conversations).map(item => item));
+        inbox = (
+          <ScrollView style={styles.container}>
+            <ListView
+              dataSource={data}
+              renderRow={rowData => <SingleConversation message={this.props.conversations[rowData]} />}
+              />
+          </ScrollView>
+        );
+      }
     }
     return (
       <View style={styles.container}>
-        { data }
-        <Link style={styles.icon} to="/create"><Text>Create</Text></Link>
+        { inbox }
+        <Link
+          style={styles.icon}
+          to="/create"
+          component={TouchableOpacity}
+          activeOpacity={0.8}
+          >
+          <Image style={styles.iconImg} source={require('../assets/chat.png')} />
+        </Link>
       </View>
     );
   }
 }
 
+Conversations.defaultProps = {
+  conversations: {},
+  conversationIds: [],
+};
+
 Conversations.propTypes = {
-  data: PropTypes.array.isRequired,
+  conversations: PropTypes.object,
+  conversationIds: PropTypes.array,
   isFetching: PropTypes.bool.isRequired,
   dispatch: PropTypes.func.isRequired,
 };
 
 function mapStateToProps(state) {
-  const { data, isFetching } = state.conversations;
+  const {
+    isFetching,
+    entities: { conversations },
+    conversations: conversationIds,
+    } = state.conversations;
+
   return {
-    data,
+    conversationIds,
+    conversations,
     isFetching,
     token: state.app.token,
   };
 }
 
-export default withRouter(connect(mapStateToProps)(Conversations));
+export default ReactTimeout(withRouter(connect(mapStateToProps)(Conversations)));

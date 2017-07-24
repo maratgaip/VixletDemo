@@ -8,11 +8,12 @@ import {
   TextInput,
   ListView,
   ScrollView,
+  TouchableOpacity,
 } from 'react-native';
 import { Link, withRouter } from 'react-router-native';
 import { connect } from 'react-redux';
 import { debounce } from 'lodash';
-import { fetchUsers } from '../redux/actions/conversations';
+import { searchUsers } from '../redux/actions/conversations';
 import UserRow from './userRow';
 
 const styles = StyleSheet.create({
@@ -25,7 +26,8 @@ const styles = StyleSheet.create({
   cancel: {
     padding: 10,
     width: 100,
-    position:'absolute',
+    position: 'absolute',
+    zIndex: 1000,
   },
   title: {
     flexDirection: 'row',
@@ -36,14 +38,14 @@ const styles = StyleSheet.create({
   },
   input: {
     height: 40,
-    paddingLeft:35,
+    paddingLeft: 35,
     fontSize: 14,
   },
   searchText: {
     paddingLeft: 10,
     paddingTop: 11,
     fontSize: 14,
-    position:'absolute',
+    position: 'absolute',
     color: '#878f96',
   },
   suggested: {
@@ -73,40 +75,40 @@ class Create extends Component {
     this.ds = new ListView.DataSource({ rowHasChanged: (r1, r2) => r1 !== r2 });
     this.state = {
       search: '',
-      users: this.ds.cloneWithRows(this.props.users),
     };
     this.runQuery = this.runQuery.bind(this);
-    this.onChange = debounce( (text) => this.runQuery(text), 500, { leading: false, trailing: true } );
-  }
-
-  componentWillReceiveProps(nextProps) {
-    // FIXME: this is a lame comparison, we should do something more intelligent than length
-    if (this.props.users.length !== nextProps.users.length) {
-      this.setState({ users: this.ds.cloneWithRows(nextProps.users) });
-    }
+    this.onChange = debounce(text => this.runQuery(text), 500, { leading: false, trailing: true });
   }
 
   runQuery(text) {
     this.setState({ search: text });
-    this.props.dispatch(fetchUsers(text));
+    if (text.length) {
+      this.props.dispatch(searchUsers(text));
+    }
   }
 
   render() {
+    const { isFetching, searchedUsers, users, userIds } = this.props;
+    const { search } = this.state;
     let suggested = <Text style={styles.suggested}>Suggested</Text>;
-    if (this.state.search.length) {
-      suggested = null
+
+    if (search.length) {
+      suggested = null;
     }
+
     let data = <View style={styles.content}><ActivityIndicator /></View>;
 
-    if (!this.props.isFetching) {
-      if(!this.props.users.length) {
+    if (!isFetching) {
+      if (!searchedUsers.length && search.length) {
         data = <View style={styles.content}><Text>No results found</Text></View>
       } else {
-        const users = this.ds.cloneWithRows(this.props.users);
+        // if no searched data get conversation user data.
+        const userData = searchedUsers.length ? searchedUsers : userIds;
+        const dataSource = this.ds.cloneWithRows(userData.map(n => users[n]));
         data = (
           <ScrollView style={styles.scrollView}>
             <ListView
-              dataSource={users}
+              dataSource={dataSource}
               enableEmptySections
               renderRow={rowData => <UserRow {...rowData} />}
               />
@@ -118,7 +120,13 @@ class Create extends Component {
       <View style={styles.container}>
         <View style={styles.header}>
           <View style={styles.cancel}>
-            <Link to="/conversations"><Text style={styles.headerText}>Cancel</Text></Link>
+            <Link
+              to="/conversations"
+              component={TouchableOpacity}
+              activeOpacity={0.8}
+              >
+              <Text style={styles.headerText}>Cancel</Text>
+            </Link>
           </View>
           <View style={styles.title}>
             <Text style={styles.headerText}>New Message</Text>
@@ -139,17 +147,35 @@ class Create extends Component {
   }
 }
 
+Create.defaultProps = {
+  searchedUsers: [],
+  userIds: [],
+  users: {},
+};
+
 Create.propTypes = {
-  users: PropTypes.array.isRequired,
-  isFetching: PropTypes.bool,
   dispatch: PropTypes.func.isRequired,
+  isFetching: PropTypes.bool,
+  searchedUsers: PropTypes.array,
+  userIds: PropTypes.array,
+  users: PropTypes.object,
 };
 
 function mapStateToProps(state) {
-  const { users, isFetching } = state.conversations;
+  const {
+    entities: {
+      users,
+      },
+    isFetching,
+    searchedUsers,
+    } = state.conversations;
+
+  const userIds = Object.keys(users).filter(id => id !== state.app.user.id);
   return {
     users,
-    isFetching
+    userIds,
+    searchedUsers,
+    isFetching,
   };
 }
 

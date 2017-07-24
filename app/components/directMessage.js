@@ -35,7 +35,7 @@ class DirectMessage extends Component {
             }
             return <Conversations />;
           }}
-        />
+          />
         <Route exact path="/conversation/:id" render={() => (<Chat />)} />
         <Route exact path="/conversations" render={() => (<Conversations />)} />
         <Route exact path="/create" render={() => (<Create />)} />

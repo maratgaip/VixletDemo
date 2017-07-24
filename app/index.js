@@ -21,19 +21,22 @@ const store = configureStore();
 class App extends Component {
   componentWillMount() {
     const {
-      domain,
       initialView,
       originApi,
       token,
       user,
-    } = this.props;
+      domain
+      } = this.props;
+
+    const userData = (typeof user === 'string') ? JSON.parse(user) : user;
+    const domainData = (typeof domain === 'string') ? JSON.parse(domain) : domain;
 
     const appData = {
-      domain,
+      domain: domainData,
       initialView,
       originApi,
       token,
-      user,
+      user: userData,
     };
     store.dispatch(setData(appData));
   }
@@ -52,11 +55,17 @@ class App extends Component {
 }
 
 App.propTypes = {
-  domain: PropTypes.object.isRequired,
+  domain: PropTypes.oneOfType([
+    PropTypes.string,
+    PropTypes.object
+  ]),
   initialView: PropTypes.string,
   originApi: PropTypes.string.isRequired,
   token: PropTypes.string.isRequired,
-  user: PropTypes.object.isRequired,
+  user: PropTypes.oneOfType([
+    PropTypes.string,
+    PropTypes.object
+  ]),
 };
 
 App.defaultProps = {

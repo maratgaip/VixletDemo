@@ -1,12 +1,15 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { Link } from 'react-router-native';
+import { connect } from 'react-redux';
+import { distanceInWordsToNow } from 'date-fns';
 import {
   StyleSheet,
   View,
   Text,
   Image,
 } from 'react-native';
+import _ from 'lodash';
 
 const styles = StyleSheet.create({
   container: {
@@ -48,39 +51,59 @@ const styles = StyleSheet.create({
   },
 });
 
-class Message extends Component {
+class Conversation extends Component {
   render() {
-    const { id, members, messages, statuses: { created } } = this.props.message;
-    // FIX ME this should have better validation
-    const { message } = messages[0];
-    const { username, avatar: { original: avatar } } = members[0];
+    const {
+      message: {
+        id,
+        members,
+        lastMessage: message,
+        lastMessageTimestamp,
+        unread,
+        },
+      myUserId,
+      } = this.props;
+
+    const filteredMembers = members.filter(member => member !== myUserId);
+
+    let otherUser;
+
+    if (filteredMembers[0]) {
+      otherUser = this.props.users[filteredMembers[0]];
+    }
+
+    const username = _.get(otherUser, 'username', '');
+    const avatar = _.get(otherUser, 'avatar.original', '');
 
     return (
-      <Link to={`/conversation/${id}`}>
+      <Link to={`/conversation/${id}`} underlayColor="#ddd" >
         <View style={styles.container}>
           <Image source={{ uri: avatar }} style={styles.avatar} />
           <View style={styles.content}>
             <View style={styles.title}>
               <Text style={styles.username}>{ username }</Text>
-              <Text style={styles.created}>{ created }</Text>
+              <Text style={styles.created}>{ !!lastMessageTimestamp && `${distanceInWordsToNow(lastMessageTimestamp)} ago` }</Text>
             </View>
             <Text style={styles.text}>{ message }</Text>
           </View>
-          <View style={styles.unread} />
+          { unread && <View style={styles.unread} /> }
         </View>
       </Link>
     );
   }
 }
 
-Message.propTypes = {
-  message: PropTypes.shape({
-    id: PropTypes.string,
-    members: PropTypes.array,
-    messages: PropTypes.array,
-    statuses: PropTypes.object,
-  }).isRequired,
+Conversation.propTypes = {
+  users: PropTypes.object.isRequired,
+  myUserId: PropTypes.string.isRequired,
 };
 
+function mapStateToProps(state) {
+  const { users } = state.conversations.entities;
+  return {
+    myUserId: state.app.user.id,
+    users,
+  };
+}
 
-export default Message;
+export default connect(mapStateToProps)(Conversation);

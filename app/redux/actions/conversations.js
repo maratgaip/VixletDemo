@@ -1,9 +1,18 @@
+import { normalize, schema } from 'normalizr';
+import { fetchJsonV2 as fetchJson } from '@vixlet/fetch-helpers';
+
+const usersSchema = new schema.Entity('users');
+const conversationSchema = new schema.Entity('conversations', { members: [usersSchema] });
+
 export const FETCHING_DATA = 'directmessage/FETCHING_DATA';
 export const FETCHING_DATA_SUCCESS = 'directmessage/FETCHING_DATA_SUCCESS';
 export const FETCHING_DATA_FAILURE = 'directmessage/FETCHING_DATA_FAILURE';
 
 export const SET_CONVERSATIONS = 'directmessage/SET_CONVERSATIONS';
-export const SET_USERS = 'directmessage/SET_USERS';
+export const SET_LATEST_MESSAGES_BY_USER = 'directmessage/SET_LATEST_MESSAGES_BY_USER';
+export const SET_SEARCHED_USERS = 'directmessage/SET_SEARCHED_USERS';
+export const SET_MESSAGES = 'directmessage/SET_MESSAGES';
+export const ADD_MESSAGE = 'directmessage/ADD_MESSAGE';
 
 export function getData() {
   return {
@@ -29,43 +38,145 @@ export const setConversations = conversations => ({
   conversations,
 });
 
-export const fetchConversations = () => (dispatch, getState) => {
-  dispatch(getData());
+export const setLatestMessagesByUser = messagesByUser => ({
+  type: SET_LATEST_MESSAGES_BY_USER,
+  messagesByUser,
+});
 
+export const setMessagesForConversation = (conversationId, messages) => ({
+  type: SET_MESSAGES,
+  conversationId,
+  messages,
+});
+
+export const addMessageToConversation = (conversationId, message) => ({
+  type: ADD_MESSAGE,
+  conversationId,
+  message,
+});
+
+export const fetchConversations = () => (dispatch, getState) => {
   const state = getState();
   const {
     originApi,
     token,
     user,
     domain,
-  } = state.app;
+    } = state.app;
+  const { conversations } = state.conversations;
 
-  return fetch(`${originApi}/directmessage/user/${user.id}/conversation`, {
+  // only show loading indicator when we have no conversations
+  if (!conversations || !conversations.length) {
+    dispatch(getData());
+  }
+
+  return fetchJson(`${originApi}directmessage/user/${user.id}/conversation`, {
     headers: {
       authorization: `Bearer ${token}`,
       domain: domain.domainId,
     },
   })
-  .then((res) => {
-    if (!res.ok) {
-      return Promise.reject(new Error('Bad response from conversations'));
-    }
+    .then(({ data }) => {
+      const filteredData = data.filter(conversation => conversation.lastMessageId);
 
-    return res.json();
-  })
-  .then(({ data }) => dispatch(setConversations(data)))
-  .catch((err) => {
-    console.log(err);
-    dispatch(getDataFailure());
-  });
+      const messagesByUser = filteredData.reduce((messages, item) => {
+        // track last message for each user
+        item.members.forEach(({ id }) => {
+          if (user.id !== id) {
+            Object.assign(messages, { [id]: item.lastMessage });
+          }
+        });
+
+        return messages;
+      }, {});
+
+      dispatch(setLatestMessagesByUser(messagesByUser));
+console.log('fetching conversation')
+      const normalizedData = normalize(filteredData, [conversationSchema]);
+      dispatch(setConversations(normalizedData));
+    })
+    .catch((err) => {
+      console.log(err);
+      dispatch(getDataFailure());
+    });
 };
 
-export const setUsers = users => ({
-  type: SET_USERS,
+export const createConversation = members => (dispatch, getState) => {
+  const state = getState();
+  const {
+    originApi,
+    token,
+    domain,
+    user,
+    } = state.app;
+
+  members.push(user.id);
+
+  return fetchJson(`${originApi}v4/directmessage/conversation`, {
+    method: 'POST',
+    headers: {
+      authorization: `Bearer ${token}`,
+      domain: domain.domainId,
+    },
+    body: {
+      members,
+    },
+  })
+    .then((data) => {
+      const normalizedData = normalize(data, conversationSchema);
+      dispatch(setConversations({
+        entities: normalizedData.entities,
+      }));
+
+      return data.id;
+    });
+};
+
+export const fetchMessages = conversationId => (dispatch, getState) => {
+  const state = getState();
+  const {
+    originApi,
+    token,
+    domain,
+    } = state.app;
+
+  return fetchJson(`${originApi}v4/directmessage/conversation/${conversationId}/message`, {
+    headers: {
+      authorization: `Bearer ${token}`,
+      domain: domain.domainId,
+    },
+  })
+    .then(({ data }) => dispatch(setMessagesForConversation(conversationId, data)));
+};
+
+export const sendMessage = (conversationId, message) => (dispatch, getState) => {
+  const state = getState();
+  const {
+    originApi,
+    token,
+    domain,
+    user,
+    } = state.app;
+
+  return fetchJson(`${originApi}v4/directmessage/conversation/${conversationId}/message`, {
+    method: 'POST',
+    headers: {
+      authorization: `Bearer ${token}`,
+      domain: domain.domainId,
+    },
+    body: {
+      message,
+    },
+  })
+    .then(() => dispatch(addMessageToConversation(conversationId, { creatorId: user.id, message })));
+};
+
+export const setSearchedUsers = users => ({
+  type: SET_SEARCHED_USERS,
   users,
 });
 
-export const fetchUsers = query => (dispatch, getState) => {
+export const searchUsers = query => (dispatch, getState) => {
   dispatch(getData());
 
   const state = getState();
@@ -73,24 +184,20 @@ export const fetchUsers = query => (dispatch, getState) => {
     originApi,
     token,
     domain,
-  } = state.app;
+    } = state.app;
 
   // FIXME: we probably shouldn't be passing the query in without url encoding it
-  return fetch(`${originApi}/search/user?query=${query}`, {
+  return fetchJson(`${originApi}v4/search/user?query=${encodeURIComponent(query)}`, {
     headers: {
       authorization: `Bearer ${token}`,
       domain: domain.domainId,
     },
   })
-  .then((res) => {
-    if (!res.ok) {
-      return Promise.reject(new Error('Bad response from conversations'));
-    }
-
-    return res.json();
-  })
-  .then(({ data }) => dispatch(setUsers(data)))
-  .catch((err) => {
-    console.log(err);
-  });
+    .then(({ data }) => {
+      const normalizedData = normalize(data, [usersSchema]);
+      dispatch(setSearchedUsers(normalizedData));
+    })
+    .catch((err) => {
+      console.log(err);
+    });
 };
