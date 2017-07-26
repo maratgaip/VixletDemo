@@ -91,7 +91,6 @@ export const fetchConversations = () => (dispatch, getState) => {
       }, {});
 
       dispatch(setLatestMessagesByUser(messagesByUser));
-console.log('fetching conversation')
       const normalizedData = normalize(filteredData, [conversationSchema]);
       dispatch(setConversations(normalizedData));
     })
@@ -129,6 +128,32 @@ export const createConversation = members => (dispatch, getState) => {
       }));
 
       return data.id;
+    });
+};
+
+export const deleteConversation = conversationId => (dispatch, getState) => {
+  const state = getState();
+  const {
+    originApi,
+    token,
+    domain,
+    } = state.app;
+  console.log('deleting conversation', conversationId);
+  return fetchJson(`${originApi}v4/directmessage/conversation/${conversationId}`, {
+    method: 'DELETE',
+    headers: {
+      authorization: `Bearer ${token}`,
+      domain: domain.domainId,
+    }
+  })
+    .then((data) => {
+      debugger;
+     /* const normalizedData = normalize(data, conversationSchema);
+      dispatch(setConversations({
+        entities: normalizedData.entities,
+      }));
+
+      return data.id;*/
     });
 };
 
@@ -200,4 +225,33 @@ export const searchUsers = query => (dispatch, getState) => {
     .catch((err) => {
       console.log(err);
     });
+};
+
+export const blockUser = id => (dispatch, getState) => {
+  const state = getState();
+  const {
+    originApi,
+    token,
+    domain,
+    } = state.app;
+  console.log('will be blocking user', id);
+  /*return fetchJson(`${originApi}v4/directmessage/conversation`, {
+    method: 'POST',
+    headers: {
+      authorization: `Bearer ${token}`,
+      domain: domain.domainId,
+    },
+    body: {
+      members,
+    },
+  })
+    .then((data) => {
+      debugger;
+     /!* const normalizedData = normalize(data, conversationSchema);
+      dispatch(setConversations({
+        entities: normalizedData.entities,
+      }));
+
+      return data.id;*!/
+    });*/
 };

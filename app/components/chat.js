@@ -6,6 +6,8 @@ import {
   TextInput,
   Keyboard,
   Button,
+  Alert,
+  ActionSheetIOS,
   TouchableOpacity,
   ScrollView,
   Image,
@@ -17,7 +19,7 @@ import {
 import { connect } from 'react-redux';
 import ReactTimeout from 'react-timeout';
 
-import { fetchMessages, sendMessage } from '../redux/actions/conversations';
+import { fetchMessages, sendMessage, deleteConversation, blockUser } from '../redux/actions/conversations';
 
 const backArrowImage = require('../assets/left-arrow.png');
 
@@ -146,7 +148,7 @@ const styles = StyleSheet.create({
   },
   date: {
     color: '#868E95',
-  },
+  }
 });
 
 class Chat extends Component {
@@ -163,7 +165,10 @@ class Chat extends Component {
     this.onRefresh = this.onRefresh.bind(this);
     this.keyboardWillShow = this.keyboardWillShow.bind(this);
     this.keyboardWillHide = this.keyboardWillHide.bind(this);
-    this.getConversationHeader = this.getConversationHeader.bind(this);
+    this.getUserInfo = this.getUserInfo.bind(this);
+    this.showActionSheet = this.showActionSheet.bind(this);
+    this.viewUser = this.viewUser.bind(this);
+    this.userBlocked = this.userBlocked.bind(this);
   }
   componentWillMount() {
     Keyboard.addListener('keyboardWillShow', this.keyboardWillShow);
@@ -191,6 +196,48 @@ class Chat extends Component {
     Keyboard.removeListener('keyboardWillHide', this.keyboardWillHide);
   }
 
+  showActionSheet() {
+    const { username } = this.getUserInfo();
+    const menu = [`View ${username}`, 'Delete Conversation', `Block ${username}`, 'Cancel'];
+
+    ActionSheetIOS.showActionSheetWithOptions({
+        options: menu,
+        cancelButtonIndex: 3
+      },
+      (index) => {
+        const { id } = this.getUserInfo();
+        console.log(id)
+        switch (index) {
+          case 0:
+            this.viewUser(id);
+            break;
+          case 1:
+            this.props.dispatch(deleteConversation(this.props.match.params.id));
+            break;
+          case 2:
+            this.props.dispatch(blockUser(id).then(this.userBlocked));
+            break;
+          default:
+            break;
+        }
+      });
+  }
+
+  viewUser() {
+    console.log('viewUser',this.props.match.params.id)
+  }
+
+  userBlocked(data) {
+    Alert.alert(
+      'Blocked',
+      data.message,
+      [
+        {text: 'OK', onPress: () => this.props.history.goBack()},
+      ],
+      { cancelable: false }
+    )
+  }
+
   onSend() {
     const { text } = this.state;
     if (text.length) {
@@ -210,7 +257,7 @@ class Chat extends Component {
       });
   }
 
-  getConversationHeader() {
+  getUserInfo() {
     const conversation = this.props.conversations[this.props.match.params.id];
     if (!conversation) {
       return '';
@@ -220,7 +267,7 @@ class Chat extends Component {
 
     const user = this.props.users[filteredMembers[0]];
     if (user) {
-      return user.username;
+      return user;
     }
 
     console.log('Error finding user in users store');
@@ -252,7 +299,7 @@ class Chat extends Component {
 
   render() {
     const messages = this.props.messages[this.props.match.params.id] || [];
-
+    const { username } = this.getUserInfo();
     return (
       <View style={styles.container}>
         <View style={styles.header}>
@@ -264,7 +311,7 @@ class Chat extends Component {
             >
             <Image style={styles.backArrow} source={backArrowImage} />
           </Link>
-          <Text style={styles.username}>{ this.getConversationHeader() }</Text>
+          <Text style={styles.username} onPress={this.showActionSheet}>{ username }</Text>
           <View style={styles.infoIcon} />
         </View>
         <View style={styles.dateHolder}>

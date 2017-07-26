@@ -19,6 +19,12 @@ const styles = StyleSheet.create({
 const store = configureStore();
 
 class App extends Component {
+  constructor(props){
+    super(props);
+    this.state = {
+      id: this.props.id
+    };
+  }
   componentWillMount() {
     const {
       initialView,
@@ -41,12 +47,18 @@ class App extends Component {
     store.dispatch(setData(appData));
   }
 
+  componentWillReceiveProps(nextProps){
+    if ( this.props.user.id !== nextProps.user.id ) {
+      this.forceUpdate();
+    }
+  }
+
   render() {
     return (
-      <Provider store={store}>
+      <Provider store={store} >
         <View style={styles.container}>
           <NativeRouter>
-            <DirectMessage />
+            <DirectMessage id={this.state.id} />
           </NativeRouter>
         </View>
       </Provider>
