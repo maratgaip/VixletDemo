@@ -232,7 +232,7 @@ const appData = {
   user
 }
 const VixletDemo = (context) => (
-  <DirectMessage domain={appData.domain} originApi={appData.originApi} token={appData.token} user={appData.user} />
+  <DirectMessage domain={appData.domain} originApi={appData.originApi} token={appData.token} user={appData.user}  />
 );
 
 AppRegistry.registerComponent('VixletDemo', () => VixletDemo);

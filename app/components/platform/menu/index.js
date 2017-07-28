@@ -4,15 +4,14 @@ import IosMenu from './iosMenu';
 import AndroidMenu from './androidMenu';
 
 const Menu = (props, context) => {
-	const { platform } = context;
-	if (platform==='ios') {
-		return <IosMenu { ...props }/>
+	if (context.platform === 'ios') {
+		return <IosMenu {...props} />;
 	}
-	return <AndroidMenu { ...props }/>
+	return <AndroidMenu {...props} />;
 };
 
 Menu.contextTypes = {
-	platform: PropTypes.string.isRequired
+	platform: PropTypes.string.isRequired,
 };
 
 export default Menu;

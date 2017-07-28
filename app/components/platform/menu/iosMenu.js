@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React from 'react';
 import PropTypes from 'prop-types';
 import {
 	Text,
@@ -10,18 +10,18 @@ const IosMenu = (props) => {
 	const showActionSheet = () => {
 		ActionSheetIOS.showActionSheetWithOptions({
 				options: text,
-				cancelButtonIndex: cancelIndex
+				cancelButtonIndex: cancelIndex,
 			},
-			(index) => fn(index));
+				index => fn(index));
 	};
-	return <Text onPress={showActionSheet}>{ value }</Text>
+	return <Text onPress={showActionSheet}>{ value }</Text>;
 };
 
 IosMenu.propTypes = {
 	menu: PropTypes.shape({
 		cancelIndex: PropTypes.number.isRequired,
-		text: PropTypes.string.required
-	}),
+		text: PropTypes.string.isRequired,
+	}).isRequired,
 	value: PropTypes.string.isRequired,
 	fn: PropTypes.func.isRequired,
 };
