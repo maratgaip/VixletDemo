@@ -143,7 +143,7 @@ class Conversation extends Component {
 }
 
 Conversation.propTypes = {
-	users: PropTypes.instanceOf(String).isRequired,
+	users: PropTypes.instanceOf(Object).isRequired,
 	myUserId: PropTypes.string.isRequired,
 	dispatch: PropTypes.func.isRequired,
 	message: PropTypes.shape({

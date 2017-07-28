@@ -19,7 +19,7 @@ import {
 import { connect } from 'react-redux';
 import ReactTimeout from 'react-timeout';
 import Menu from './platform/menu';
-import { fetchMessages, sendMessage, deleteConversation } from '../redux/actions/conversations';
+import { fetchMessages, sendMessage, deleteConversation, blockUser } from '../redux/actions/conversations';
 
 const backArrowImage = require('../assets/left-arrow.png');
 
@@ -178,9 +178,9 @@ class Chat extends Component {
 	componentDidMount() {
 		this.props.dispatch(fetchMessages(this.props.match.params.id));
 		// TODO: use SSE instead of polling
-		// this.props.setInterval(() => {
-		this.props.dispatch(fetchMessages(this.props.match.params.id));
-		// }, 3000);
+		this.props.setInterval(() => {
+			this.props.dispatch(fetchMessages(this.props.match.params.id));
+		}, 3000);
 	}
 
 	componentDidUpdate() {
@@ -232,6 +232,7 @@ class Chat extends Component {
 	}
 
 	viewUser() {
+		// TODO use deeplinking to send user id back to native app
 		console.log('viewUser', this.props.match.params.id);
 	}
 
@@ -251,22 +252,21 @@ class Chat extends Component {
 	}
 
 	keyboardWillShow(keyboardInfo) {
-		// console.log('keyboardInfo', keyboardInfo);
 		this.setState({ marginBottom: keyboardInfo.startCoordinates.height + 40 });
 	}
 
 	menuClicked(index) {
-		const { id } = this.getUserInfo();
 		const { match: { params } } = this.props;
+		const { id } = this.getUserInfo();
 		switch (index) {
 			case 0:
-				this.viewUser(id);
+				this.viewUser();
 				break;
 			case 1:
 				this.props.dispatch(deleteConversation(params.id));
 				break;
 			case 2:
-				// this.props.dispatch(blockUser(id));
+				this.props.dispatch(blockUser(id));
 				break;
 			default:
 				break;
@@ -349,10 +349,11 @@ Chat.propTypes = {
 		goBack: PropTypes.func.isRequired,
 	}).isRequired,
 	dispatch: PropTypes.func.isRequired,
-	conversations: PropTypes.instanceOf(String).isRequired,
+	conversations: PropTypes.instanceOf(Object).isRequired,
+	setInterval: PropTypes.func.isRequired,
 	myUserId: PropTypes.string.isRequired,
-	users: PropTypes.instanceOf(String).isRequired,
-	messages: PropTypes.instanceOf(String).isRequired,
+	users: PropTypes.instanceOf(Object).isRequired,
+	messages: PropTypes.instanceOf(Object).isRequired,
 };
 
 function mapStateToProps(state) {

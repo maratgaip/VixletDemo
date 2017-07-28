@@ -156,9 +156,9 @@ Create.defaultProps = {
 Create.propTypes = {
 	dispatch: PropTypes.func.isRequired,
 	isFetching: PropTypes.bool.isRequired,
-	searchedUsers: PropTypes.instanceOf(String).isRequired,
-	userIds: PropTypes.instanceOf(String).isRequired,
-	users: PropTypes.instanceOf(String).isRequired,
+	searchedUsers: PropTypes.instanceOf(Object).isRequired,
+	userIds: PropTypes.instanceOf(Array).isRequired,
+	users: PropTypes.instanceOf(Object).isRequired,
 };
 
 function mapStateToProps(state) {

@@ -20,7 +20,7 @@ const IosMenu = (props) => {
 IosMenu.propTypes = {
 	menu: PropTypes.shape({
 		cancelIndex: PropTypes.number.isRequired,
-		text: PropTypes.string.isRequired,
+		text: PropTypes.instanceOf(Array).isRequired,
 	}).isRequired,
 	value: PropTypes.string.isRequired,
 	fn: PropTypes.func.isRequired,

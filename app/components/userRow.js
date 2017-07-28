@@ -67,13 +67,13 @@ class UserRow extends Component {
 	}
 
 	render() {
-		const { id, username, avatar: { original }, latestMessagesByUser } = this.props;
+		const { id, username, avatar: { small }, latestMessagesByUser } = this.props;
 		const message = latestMessagesByUser[id] || '';
 
 		return (
 			<TouchableHighlight onPress={this.handleClick} underlayColor="#ddd" >
 				<View style={styles.container} >
-					<Image source={{ uri: original }} style={styles.avatar} />
+					<Image source={{ uri: small }} style={styles.avatar} />
 					<View style={styles.content}>
 						<View style={styles.title}>
 							<Text style={styles.username}>{ username }</Text>
@@ -92,9 +92,9 @@ UserRow.propTypes = {
 	dispatch: PropTypes.func.isRequired,
 	id: PropTypes.string.isRequired,
 	username: PropTypes.string.isRequired,
-	latestMessagesByUser: PropTypes.instanceOf(String).isRequired,
+	latestMessagesByUser: PropTypes.instanceOf(Object).isRequired,
 	avatar: PropTypes.shape({
-		original: PropTypes.string.isRequired,
+		small: PropTypes.string.isRequired,
 	}).isRequired,
 	history: PropTypes.shape({
 		push: PropTypes.func.isRequired,

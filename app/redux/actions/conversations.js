@@ -138,7 +138,6 @@ export const deleteConversation = conversationId => (dispatch, getState) => {
 		token,
 		domain,
 		} = state.app;
-	console.log('deleting conversation', conversationId);
 	return fetchJson(`${originApi}v4/directmessage/conversation/${conversationId}`, {
 		method: 'DELETE',
 		headers: {
@@ -218,5 +217,28 @@ export const searchUsers = query => (dispatch, getState) => {
 		})
 		.catch((err) => {
 			console.log(err);
+		});
+};
+
+export const blockUser = id => (dispatch, getState) => {
+	// TODO correct api end point when api is ready.
+	const state = getState();
+	const {
+		originApi,
+		token,
+		domain,
+		} = state.app;
+	return fetchJson(`${originApi}v4/directmessage/block`, {
+		method: 'POST',
+		headers: {
+			authorization: `Bearer ${token}`,
+			domain: domain.domainId,
+		},
+		body: {
+			id,
+		},
+	})
+		.then(() => {
+
 		});
 };

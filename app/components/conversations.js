@@ -51,9 +51,9 @@ class Conversations extends Component {
 	componentWillMount() {
 		if (!this.props.conversationIds.length) {
 			this.props.dispatch(fetchConversations());
-			// this.props.setInterval(() => {
-			// this.props.dispatch(fetchConversations());
-			// }, 2000);
+			this.props.setInterval(() => {
+				this.props.dispatch(fetchConversations());
+			}, 2000);
 		}
 	}
 
@@ -99,9 +99,10 @@ Conversations.defaultProps = {
 };
 
 Conversations.propTypes = {
-	conversations: PropTypes.instanceOf(String).isRequired,
-	conversationIds: PropTypes.instanceOf(String).isRequired,
+	conversations: PropTypes.instanceOf(Object).isRequired,
+	conversationIds: PropTypes.instanceOf(Array).isRequired,
 	isFetching: PropTypes.bool.isRequired,
+	setInterval: PropTypes.func.isRequired,
 	dispatch: PropTypes.func.isRequired,
 };
 
