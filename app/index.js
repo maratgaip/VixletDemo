@@ -3,6 +3,7 @@ import PropTypes from 'prop-types';
 import {
   View,
   StyleSheet,
+  Platform,
 } from 'react-native';
 import { Provider } from 'react-redux';
 import { NativeRouter } from 'react-router-native';
@@ -25,6 +26,11 @@ class App extends Component {
       id: this.props.id
     };
   }
+
+  getChildContext() {
+    return { platform: Platform.OS }
+  }
+
   componentWillMount() {
     const {
       initialView,
@@ -78,6 +84,10 @@ App.propTypes = {
     PropTypes.string,
     PropTypes.object
   ]),
+};
+
+App.childContextTypes = {
+  platform: PropTypes.string.isRequired
 };
 
 App.defaultProps = {

@@ -3,18 +3,24 @@ import PropTypes from 'prop-types';
 import { Link } from 'react-router-native';
 import { connect } from 'react-redux';
 import { distanceInWordsToNow } from 'date-fns';
+import Swipeout from 'react-native-swipeout';
 import {
   StyleSheet,
   View,
   Text,
+  ActionSheetIOS,
+  TouchableHighlight,
   Image,
 } from 'react-native';
+import { deleteConversation, blockUser } from '../redux/actions/conversations';
 import _ from 'lodash';
 
 const styles = StyleSheet.create({
   container: {
     padding: 12,
     flexDirection: 'row',
+  },
+  body: {
     borderBottomWidth: 1,
     borderBottomColor: '#ccc',
   },
@@ -49,46 +55,97 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     marginRight: 10,
   },
+  check: {
+    height: 25,
+    width: 25,
+    marginLeft: 10,
+    marginTop: 10,
+    marginRight: 20,
+  },
 });
 
 class Conversation extends Component {
+
+  constructor(props){
+    super(props);
+    this.state = {
+      check: false
+    };
+    this.blockUser = this.blockUser.bind(this);
+    this.getUserInfo = this.getUserInfo.bind(this);
+    this.deleteConversation = this.deleteConversation.bind(this);
+  }
+
+  getUserInfo() {
+    const { message } = this.props;
+    if (!message) {
+      return '';
+    }
+    const filteredMembers = message.members.filter(member => member !== this.props.myUserId);
+    const user = this.props.users[filteredMembers[0]];
+    if (user) {
+      return user;
+    }
+    console.log('Error finding user in users store');
+    return '';
+  }
+
+  deleteConversation(id) {
+    return function(){
+      this.props.dispatch(deleteConversation(id));
+    }.bind( this );
+  }
+
+  blockUser(id) {
+    return function(){
+      this.props.dispatch(blockUser(id));
+    }.bind( this );
+  }
+
   render() {
     const {
       message: {
         id,
-        members,
         lastMessage: message,
         lastMessageTimestamp,
         unread,
         },
-      myUserId,
       } = this.props;
 
-    const filteredMembers = members.filter(member => member !== myUserId);
-
-    let otherUser;
-
-    if (filteredMembers[0]) {
-      otherUser = this.props.users[filteredMembers[0]];
-    }
-
-    const username = _.get(otherUser, 'username', '');
-    const avatar = _.get(otherUser, 'avatar.original', '');
-
+    const { username, id: userId, avatar: { original: avatar }} = this.getUserInfo();
+    const swipeBtns = [{
+      text: 'Delete',
+      backgroundColor: 'red',
+      underlayColor: '#ddd',
+      onPress:  this.deleteConversation(id)
+    },
+    {
+      text: `Block`,
+      backgroundColor: 'grey',
+      underlayColor: '#ddd',
+      onPress:  this.blockUser(userId)
+    }];
     return (
-      <Link to={`/conversation/${id}`} underlayColor="#ddd" >
-        <View style={styles.container}>
-          <Image source={{ uri: avatar }} style={styles.avatar} />
-          <View style={styles.content}>
-            <View style={styles.title}>
-              <Text style={styles.username}>{ username }</Text>
-              <Text style={styles.created}>{ !!lastMessageTimestamp && `${distanceInWordsToNow(lastMessageTimestamp)} ago` }</Text>
+    <View style={styles.body}>
+      <Swipeout right={swipeBtns}
+                autoClose={true}
+                underlayColor="#ddd"
+                backgroundColor='transparent'>
+        <Link to={`/conversation/${id}`} underlayColor="#ddd">
+          <View style={styles.container}>
+            <Image source={{ uri: avatar }} style={styles.avatar} />
+            <View style={styles.content}>
+              <View style={styles.title}>
+                <Text style={styles.username}>{ username }</Text>
+                <Text style={styles.created}>{ !!lastMessageTimestamp && `${distanceInWordsToNow(lastMessageTimestamp)} ago` }</Text>
+              </View>
+              <Text style={styles.text}>{ message }</Text>
             </View>
-            <Text style={styles.text}>{ message }</Text>
+            { unread && <View style={styles.unread} /> }
           </View>
-          { unread && <View style={styles.unread} /> }
-        </View>
-      </Link>
+        </Link>
+      </Swipeout>
+    </View>
     );
   }
 }

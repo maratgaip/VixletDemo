@@ -231,7 +231,7 @@ const appData = {
   token: '6LzN2t7RHF62ipNzL7kR5v9Rj8XZaJ27CH8AFd2GGZWKV9WgQQTKVYxX3tDifmh55CSyr5pRfbwpBNgMqhaPDCSitjscUr6BuotHAuLYjaJTEq1tgJBWTk7dnA7d56BxeVYmBvfgkzPEa9aKSeHigeyNAbSawiHAhVrewSA7AkDom5SAH3ACrdKPjsRC9VoxAbMD1nPi3AkBpwG2dXXZ6vci1MpQ6sngcxV3sJhT5nhV2iw688W88y6CkADdqtU62HoHvXpradiD4fCH6tDHQfdWyYxNRVGo3WLTN2FXhrgbjYzyCpkaou4KGvZq9GzcdZcnsyEJ8PMRwCJSuZqt3d642YTTLHTFmjg67Mi1XUrqNHg3Zt2j6ccFnzLhJNTQ5fm7dchu6TpArMYCcQQU4MSQDHxRpbvFTYyhiv4BnV',
   user
 }
-const VixletDemo = () => (
+const VixletDemo = (context) => (
   <DirectMessage domain={appData.domain} originApi={appData.originApi} token={appData.token} user={appData.user} />
 );
 

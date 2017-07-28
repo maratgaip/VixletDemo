@@ -69,8 +69,7 @@ export const fetchConversations = () => (dispatch, getState) => {
   if (!conversations || !conversations.length) {
     dispatch(getData());
   }
-
-  return fetchJson(`${originApi}directmessage/user/${user.id}/conversation`, {
+  return fetchJson(`${originApi}directmessage/conversation`, {
     headers: {
       authorization: `Bearer ${token}`,
       domain: domain.domainId,
@@ -89,7 +88,6 @@ export const fetchConversations = () => (dispatch, getState) => {
 
         return messages;
       }, {});
-
       dispatch(setLatestMessagesByUser(messagesByUser));
       const normalizedData = normalize(filteredData, [conversationSchema]);
       dispatch(setConversations(normalizedData));
@@ -147,7 +145,6 @@ export const deleteConversation = conversationId => (dispatch, getState) => {
     }
   })
     .then((data) => {
-      debugger;
      /* const normalizedData = normalize(data, conversationSchema);
       dispatch(setConversations({
         entities: normalizedData.entities,

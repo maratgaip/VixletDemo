@@ -1,4 +1,6 @@
 import React, { Component } from 'react';
+import PropTypes from 'prop-types';
+import Menu from './platform/menu';
 import {
   StyleSheet,
   View,
@@ -166,8 +168,8 @@ class Chat extends Component {
     this.keyboardWillShow = this.keyboardWillShow.bind(this);
     this.keyboardWillHide = this.keyboardWillHide.bind(this);
     this.getUserInfo = this.getUserInfo.bind(this);
-    this.showActionSheet = this.showActionSheet.bind(this);
     this.viewUser = this.viewUser.bind(this);
+    this.menuClicked = this.menuClicked.bind(this);
     this.userBlocked = this.userBlocked.bind(this);
   }
   componentWillMount() {
@@ -194,33 +196,6 @@ class Chat extends Component {
   componentWillUnmount() {
     Keyboard.removeListener('keyboardWillShow', this.keyboardWillShow);
     Keyboard.removeListener('keyboardWillHide', this.keyboardWillHide);
-  }
-
-  showActionSheet() {
-    const { username } = this.getUserInfo();
-    const menu = [`View ${username}`, 'Delete Conversation', `Block ${username}`, 'Cancel'];
-
-    ActionSheetIOS.showActionSheetWithOptions({
-        options: menu,
-        cancelButtonIndex: 3
-      },
-      (index) => {
-        const { id } = this.getUserInfo();
-        console.log(id)
-        switch (index) {
-          case 0:
-            this.viewUser(id);
-            break;
-          case 1:
-            this.props.dispatch(deleteConversation(this.props.match.params.id));
-            break;
-          case 2:
-            this.props.dispatch(blockUser(id).then(this.userBlocked));
-            break;
-          default:
-            break;
-        }
-      });
   }
 
   viewUser() {
@@ -283,6 +258,22 @@ class Chat extends Component {
     this.setState({ marginBottom: keyboardInfo.startCoordinates.height + 40 });
   }
 
+  menuClicked(index) {
+    const { id } = this.getUserInfo();
+    const { match: { params } } = this.props;
+    switch(index) {
+      case 0:
+        this.viewUser(id);
+        break;
+      case 1:
+        this.props.dispatch(deleteConversation(params.id));
+        break;
+      case 2:
+        this.props.dispatch(blockUser(id));
+        break;
+    }
+  }
+
   renderRow(message, index) {
     const myMessage = (this.props.myUserId === message.creatorId);
 
@@ -300,6 +291,8 @@ class Chat extends Component {
   render() {
     const messages = this.props.messages[this.props.match.params.id] || [];
     const { username } = this.getUserInfo();
+    const menu = { text: [`View ${username}`, 'Delete Conversation', `Block ${username}`, 'Cancel'], cancelIndex: 3};
+
     return (
       <View style={styles.container}>
         <View style={styles.header}>
@@ -311,7 +304,7 @@ class Chat extends Component {
             >
             <Image style={styles.backArrow} source={backArrowImage} />
           </Link>
-          <Text style={styles.username} onPress={this.showActionSheet}>{ username }</Text>
+          <Menu menu={ menu } value={ username } fn={this.menuClicked} />
           <View style={styles.infoIcon} />
         </View>
         <View style={styles.dateHolder}>
