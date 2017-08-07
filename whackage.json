@@ -1,0 +1,10 @@
+{
+  "include": "/**/*.js",
+  "exclude": [
+    "/node_modules/*",
+    ".git"
+  ],
+  "dependencies": {
+    "@vixlet/react-native-direct-message": "../../Vixlet/react-components/packages/react-native-direct-message/"
+  }
+}

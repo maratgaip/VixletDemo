@@ -2,7 +2,6 @@ import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import {
 	ActivityIndicator,
-	StyleSheet,
 	View,
 	Text,
 	Image,
@@ -17,30 +16,8 @@ import ReactTimeout from 'react-timeout';
 import SingleConversation from './singleConversation';
 import { fetchConversations } from '../redux/actions/conversations';
 
-const styles = StyleSheet.create({
-	description: {
-		fontSize: 14,
-		marginTop: 10,
-		textAlign: 'center',
-		color: '#777',
-	},
-	container: {
-		flex: 1,
-	},
-	icon: {
-		position: 'absolute',
-		bottom: 10,
-		right: 10,
-	},
-	iconImg: {
-		height: 70,
-		width: 70,
-	},
-	loadData: {
-		marginTop: 40,
-	},
-});
-const chatIcon = require('../assets/chat.png');
+import styles from '../styles/conversations';
+const chatIcon = require('../images/chat.png');
 
 class Conversations extends Component {
 	constructor(props) {

@@ -7,9 +7,9 @@ import {
 } from 'react-native';
 import { Provider } from 'react-redux';
 import { NativeRouter } from 'react-router-native';
-import DirectMessage from './components/directMessage';
-import configureStore from './components/configureStore';
+import configureStore from './config/configureStore';
 import { setData } from './redux/actions/app';
+import Routes from './routes';
 
 const styles = StyleSheet.create({
   container: {
@@ -36,19 +36,18 @@ class App extends Component {
       initialView,
       originApi,
       token,
-      user,
-      domain
+      user: userJson,
+      domain: domainJson,
       } = this.props;
 
-    const userData = (typeof user === 'string') ? JSON.parse(user) : user;
-    const domainData = (typeof domain === 'string') ? JSON.parse(domain) : domain;
-
+    const user = (typeof userJson === 'string') ? JSON.parse(userJson) : userJson;
+    const domain = (typeof domainJson === 'string') ? JSON.parse(domainJson) : domainJson;
     const appData = {
-      domain: domainData,
+      domain,
       initialView,
       originApi,
       token,
-      user: userData,
+      user,
     };
     store.dispatch(setData(appData));
   }
@@ -64,7 +63,7 @@ class App extends Component {
       <Provider store={store} >
         <View style={styles.container}>
           <NativeRouter>
-            <DirectMessage id={this.state.id} />
+            <Routes />
           </NativeRouter>
         </View>
       </Provider>

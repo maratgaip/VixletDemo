@@ -5,7 +5,13 @@ import {
 	ActionSheetIOS,
 } from 'react-native';
 
-const IosMenu = (props) => {
+const textStyle = {
+	textAlign: 'center',
+	color: '#fff',
+	fontSize: 16,
+};
+
+const PopUp = (props) => {
 	const { menu: { text, cancelIndex }, fn, value } = props;
 	const showActionSheet = () => {
 		ActionSheetIOS.showActionSheetWithOptions({
@@ -14,10 +20,10 @@ const IosMenu = (props) => {
 			},
 				index => fn(index));
 	};
-	return <Text onPress={showActionSheet}>{ value }</Text>;
+	return <Text style={textStyle} onPress={showActionSheet}>{ value }</Text>;
 };
 
-IosMenu.propTypes = {
+PopUp.propTypes = {
 	menu: PropTypes.shape({
 		cancelIndex: PropTypes.number.isRequired,
 		text: PropTypes.instanceOf(Array).isRequired,
@@ -26,4 +32,4 @@ IosMenu.propTypes = {
 	fn: PropTypes.func.isRequired,
 };
 
-export default IosMenu;
+export default PopUp;

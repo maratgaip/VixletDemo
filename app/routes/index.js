@@ -1,4 +1,5 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 import {
 	View,
 	StyleSheet,
@@ -6,9 +7,9 @@ import {
 import { Route, withRouter } from 'react-router-native';
 import { connect } from 'react-redux';
 
-import Conversations from './conversations';
-import Chat from './chat';
-import Create from './create';
+import Conversations from '../components/conversations';
+import Chat from '../components/chat';
+import Create from '../components/create';
 
 const styles = StyleSheet.create({
 	container: {
@@ -17,8 +18,7 @@ const styles = StyleSheet.create({
 	},
 });
 
-
-const DirectMessage = (props) => (
+const Routes = (props) => (
 	<View style={styles.container}>
 		<Route
 			exact
@@ -43,8 +43,8 @@ const mapStateToProps = state => ({
 	initialView: state.app.initialView,
 });
 
-DirectMessage.defaultProps = {
-	initialView: 'conversations',
+Routes.propTypes = {
+	initialView: PropTypes.string.isRequired,
 };
 
-export default withRouter(connect(mapStateToProps)(DirectMessage));
+export default withRouter(connect(mapStateToProps)(Routes));
